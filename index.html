@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" id="themeColor" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Personal Data" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <!-- Set theme before first paint to avoid flash -->
+  <script>!function () { var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; document.getElementById('themeColor').content = t === 'dark' ? '#000000' : '#f5f5f5' }()</script>
+  <title>Personal Data</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000;
+      --bg-surface: #222;
+      --border-faint: #444;
+      --border-subtle: #444;
+      --border-mid: #333;
+      --text: #fff;
+      --text-muted: #888;
+      --text-faint: #999;
+      --accent: #2563eb;
+      --hover-text: #fff;
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #fdfdfd;
+      --bg-surface: #fff;
+      --border-faint: #e8e8e8;
+      --border-subtle: #ddd;
+      --border-mid: #ddd;
+      --text: #111;
+      --text-muted: #666;
+      --text-faint: #888;
+      --accent: #2563eb;
+      --hover-text: #111;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    #app {
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 20px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    main {
+      padding: 22px 24px;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .toolbar-btn {
+      background: none;
+      border: 1px solid var(--border-mid);
+      border-radius: 3px;
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 6px 12px;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #themeBtn {
+      padding: 7px 9px;
+      border-color: transparent;
+    }
+
+    .toolbar-btn:focus-visible,
+    .toolbar-btn:active {
+      background: rgba(37, 99, 235, 0.4);
+      border-color: var(--accent);
+      color: var(--hover-text);
+    }
+
+    @media (hover: hover) {
+      .toolbar-btn:hover {
+        background: rgba(37, 99, 235, 0.4);
+        border-color: var(--accent);
+        color: var(--hover-text);
+      }
+    }
+
+    .primary-btn {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .primary-btn:focus-visible,
+    .primary-btn:active {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: #fff;
+    }
+
+    @media (hover: hover) {
+      .primary-btn:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
+      }
+    }
+
+    footer {
+      background: var(--bg-surface);
+      padding: 16px 24px;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      border-top: 1px solid var(--border-faint);
+    }
+
+    /* ── Shared form styles ─────────────────────────────────────────────────── */
+
+    .panel {
+      max-width: 440px;
+      margin: 40px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .panel p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .panel form,
+    .panel .form-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .text-input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-mid);
+      border-radius: 3px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-input:focus {
+      border-color: var(--accent);
+    }
+
+    .error {
+      font-size: 12px;
+      color: #ef4444;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── Fields setup ───────────────────────────────────────────────────────── */
+
+    .fields-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .field-row .text-input {
+      flex: 1;
+    }
+
+    .drag-handle {
+      cursor: grab;
+      color: var(--text-muted);
+      font-size: 16px;
+      user-select: none;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .field-row.dragging {
+      opacity: 0.4;
+    }
+
+    .field-row.drag-over {
+      outline: 1px dashed var(--accent);
+      border-radius: 3px;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 3px;
+      transition: color 0.2s;
+    }
+
+    .remove-btn:focus-visible,
+    .remove-btn:active {
+      color: #ef4444;
+    }
+
+    @media (hover: hover) {
+      .remove-btn:hover {
+        color: #ef4444;
+      }
+    }
+
+    /* ── Entry form ─────────────────────────────────────────────────────────── */
+
+    .entry-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-mid);
+    }
+
+    .entry-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .field-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .field-input-row input {
+      width: 200px;
+      flex-shrink: 0;
+    }
+
+    .field-note {
+      font-size: 10px;
+      color: var(--text-faint);
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: normal;
+      text-wrap: balance;
+    }
+
+    #entryTs {
+      width: 200px;
+    }
+
+    .entry-form .field-label input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-mid);
+      border-radius: 3px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .entry-form .field-label input:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── History table ──────────────────────────────────────────────────────── */
+
+    .history-heading {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 16px 10px 0;
+      border-bottom: 1px solid var(--border-mid);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 16px 10px 0;
+      border-bottom: 1px solid var(--border-faint);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 20px 0;
+    }
+
+    .confirm-popup {
+      position: fixed;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-mid);
+      border-radius: 4px;
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .delete-btn {
+      padding: 2px 7px;
+      font-size: 14px;
+      border-color: transparent;
+      color: var(--text-muted);
+    }
+
+    .danger-btn {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+
+    .danger-btn:focus-visible,
+    .danger-btn:active {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      color: #fff;
+    }
+
+    @media (hover: hover) {
+      .danger-btn:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        color: #fff;
+      }
+    }
+
+    .undo-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-mid);
+      border-radius: 4px;
+      padding: 10px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <div class="header-left">
+        <div class="logo">Personal <span>Data</span></div>
+        <div class="subtitle">v0.1.0</div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="settingsBtn" class="toolbar-btn" style="display:none">Settings</button>
+        <button type="button" id="themeBtn" class="toolbar-btn"></button>
+      </div>
+    </header>
+
+    <main id="main"></main>
+
+    <footer>
+      © 2026 Nev Delap.
+    </footer>
+  </div>
+
+  <script>
+    const ICON_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+    const ICON_MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+
+    function applyTheme(dark) {
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      document.getElementById('themeBtn').innerHTML = dark ? ICON_SUN : ICON_MOON;
+      document.getElementById('themeBtn').setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      document.getElementById('themeColor').content = dark ? '#000000' : '#f5f5f5';
+    }
+
+    let isDark = document.documentElement.dataset.theme !== 'light';
+    applyTheme(isDark);
+
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      isDark = !isDark;
+      applyTheme(isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('theme')) {
+        isDark = e.matches;
+        applyTheme(isDark);
+      }
+    });
+  </script>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { getDatabase, ref, set, get, remove } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+
+    const CONFIG_KEY = 'pd_config';
+
+    function loadConfig() {
+      try { return JSON.parse(localStorage.getItem(CONFIG_KEY)); } catch { return null; }
+    }
+
+    function saveConfig(cfg) {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    }
+
+    function getFirebase(cfg) {
+      const app = getApps().length ? getApp() : initializeApp({ apiKey: cfg.apiKey, databaseURL: cfg.databaseURL });
+      return getDatabase(app);
+    }
+
+    function sanitizeKey(key) {
+      return encodeURIComponent(key);
+    }
+
+    function normalizeFields(raw) {
+      if (!raw) return [];
+      return raw.map(f => typeof f === 'string' ? { name: f, notes: '' } : f);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatTs(ts) {
+      if (!ts) return '—';
+      return new Date(ts).toLocaleString(undefined, {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    function nowLocal() {
+      const d = new Date();
+      d.setSeconds(0, 0);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
+    // ── Screens ──────────────────────────────────────────────────────────────
+
+    function renderSetup(errorMsg = '') {
+      document.getElementById('settingsBtn').style.display = 'none';
+      document.getElementById('main').innerHTML = `
+        <div class="panel">
+          <h2>Connect to Firebase</h2>
+          <p>Enter your Firebase Realtime Database credentials and a personal key. Your credentials are stored only in this browser.</p>
+          <form id="setupForm">
+            <label class="field-label">Firebase API Key
+              <input class="text-input" type="password" id="apiKey" name="password" autocomplete="current-password" spellcheck="false" />
+            </label>
+            <label class="field-label">Database URL
+              <input class="text-input" type="text" id="databaseURL" name="username" autocomplete="username" spellcheck="false"
+                placeholder="https://your-project-default-rtdb.firebaseio.com" />
+            </label>
+            <label class="field-label">Personal Key
+              <input class="text-input" type="text" id="personalKey" name="personalKey" spellcheck="false"
+                placeholder="Something memorable" />
+            </label>
+            ${errorMsg ? `<p class="error">${escapeHtml(errorMsg)}</p>` : ''}
+            <div class="form-actions">
+              <button type="submit" class="toolbar-btn primary-btn" id="connectBtn" disabled>Connect</button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      const connectBtn = document.getElementById('connectBtn');
+      const inputs = ['apiKey', 'databaseURL', 'personalKey'].map(id => document.getElementById(id));
+      function checkFields() {
+        connectBtn.disabled = !inputs.every(el => el.value.trim());
+      }
+      inputs.forEach(el => { el.addEventListener('input', checkFields); el.addEventListener('change', checkFields); });
+      setTimeout(checkFields, 300);
+
+      document.getElementById('setupForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const cfg = {
+          apiKey: document.getElementById('apiKey').value.trim(),
+          databaseURL: document.getElementById('databaseURL').value.trim(),
+          key: document.getElementById('personalKey').value.trim(),
+        };
+        if (!cfg.apiKey || !cfg.databaseURL || !cfg.key) return;
+        const btn = document.querySelector('#setupForm button[type=submit]');
+        btn.textContent = 'Connecting…';
+        btn.disabled = true;
+        try {
+          const db = getFirebase(cfg);
+          const hashedKey = sanitizeKey(cfg.key);
+          await get(ref(db, `${hashedKey}/fields`));
+          cfg.hashedKey = hashedKey;
+          saveConfig(cfg);
+          renderMain(db, hashedKey);
+        } catch (err) {
+          renderSetup(`Could not connect: ${err.message}`);
+        }
+      });
+    }
+
+    function renderFieldsSetup(db, key, existing = []) {
+      document.getElementById('settingsBtn').style.display = 'none';
+      const main = document.getElementById('main');
+
+      function buildList(fields) {
+        return fields.map((f, i) => `
+          <div class="field-row" data-i="${i}" draggable="true">
+            <span class="drag-handle">⠿</span>
+            <input class="text-input field-name-input" type="text" value="${escapeHtml(f.name)}" placeholder="Field name" />
+            <input class="text-input field-notes-input" type="text" value="${escapeHtml(f.notes)}" placeholder="Notes (optional)" />
+            <button type="button" class="remove-btn" aria-label="Remove">×</button>
+          </div>
+        `).join('');
+      }
+
+      function readFields() {
+        document.querySelectorAll('.field-row').forEach((row, i) => {
+          fields[i] = {
+            name: row.querySelector('.field-name-input').value,
+            notes: row.querySelector('.field-notes-input').value,
+          };
+        });
+      }
+
+      let fields = existing.length ? existing.map(f => typeof f === 'string' ? { name: f, notes: '' } : { ...f }) : [{ name: '', notes: '' }];
+
+      function render() {
+        main.innerHTML = `
+          <div class="panel">
+            <h2>${existing.length ? 'Edit Fields' : 'Set Up Fields'}</h2>
+            <p>Add the names of the data points you want to track. You can change these later in Settings.</p>
+            <div class="form-body">
+              <div class="fields-list" id="fieldsList">${buildList(fields)}</div>
+              <div class="form-actions">
+                <button type="button" id="addFieldBtn" class="toolbar-btn">+ Add Field</button>
+                <button type="button" id="saveFieldsBtn" class="toolbar-btn primary-btn">Save</button>
+                ${existing.length ? `<button type="button" id="cancelFieldsBtn" class="toolbar-btn">Cancel</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('addFieldBtn').addEventListener('click', () => {
+          readFields();
+          fields.push({ name: '', notes: '' });
+          render();
+          document.querySelectorAll('.field-name-input').at(-1).focus();
+        });
+
+        document.querySelectorAll('.remove-btn').forEach((btn, i) => {
+          btn.addEventListener('click', () => {
+            readFields();
+            fields.splice(i, 1);
+            if (!fields.length) fields = [{ name: '', notes: '' }];
+            render();
+          });
+        });
+
+        document.getElementById('saveFieldsBtn').addEventListener('click', async () => {
+          readFields();
+          const cleaned = fields.filter(f => f.name.trim()).map(f => ({ name: f.name.trim(), notes: f.notes.trim() }));
+          if (!cleaned.length) return;
+          await set(ref(db, `${key}/fields`), cleaned);
+          renderMain(db, key);
+        });
+
+        document.getElementById('cancelFieldsBtn')?.addEventListener('click', () => renderMain(db, key));
+
+        let dragSrc = null;
+        document.querySelectorAll('.field-row').forEach((row, i) => {
+          row.addEventListener('dragstart', () => {
+            readFields();
+            dragSrc = i;
+            row.classList.add('dragging');
+          });
+          row.addEventListener('dragend', () => row.classList.remove('dragging'));
+          row.addEventListener('dragover', e => { e.preventDefault(); row.classList.add('drag-over'); });
+          row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+          row.addEventListener('drop', e => {
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            if (dragSrc === null || dragSrc === i) return;
+            const [moved] = fields.splice(dragSrc, 1);
+            fields.splice(i, 0, moved);
+            render();
+          });
+        });
+      }
+
+      render();
+    }
+
+    async function renderMain(db, key) {
+      document.getElementById('confirmPopup')?.remove();
+      document.getElementById('settingsBtn').style.display = 'none';
+      document.getElementById('main').innerHTML = `<p class="status">Loading…</p>`;
+
+      const [fieldsSnap, entriesSnap] = await Promise.all([
+        get(ref(db, `${key}/fields`)),
+        get(ref(db, `${key}/entries`)),
+      ]);
+
+      const fields = normalizeFields(fieldsSnap.val());
+      if (!fields.length) { renderFieldsSetup(db, key); return; }
+
+      const entries = entriesSnap.val()
+        ? Object.values(entriesSnap.val()).sort((a, b) => b.ts - a.ts)
+        : [];
+
+      document.getElementById('settingsBtn').style.display = '';
+      document.getElementById('settingsBtn').onclick = () => renderSettings(db, key, fields);
+
+      document.getElementById('main').innerHTML = `
+        <form id="entryForm" class="entry-form">
+          <label class="field-label">Time
+            <input type="datetime-local" id="entryTs" value="${nowLocal()}" />
+          </label>
+          <div class="entry-fields">
+            ${fields.map(f => `
+              <label class="field-label">${escapeHtml(f.name)}
+                <div class="field-input-row">
+                  <input type="text" inputmode="decimal" data-field="${escapeHtml(f.name)}" autocomplete="off" />
+                  ${f.notes ? `<span class="field-note">${escapeHtml(f.notes)}</span>` : ''}
+                </div>
+              </label>
+            `).join('')}
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="toolbar-btn primary-btn">Save</button>
+          </div>
+        </form>
+        <div>
+          <p class="history-heading">History</p>
+          <div class="table-wrap">${renderTable(fields, entries)}</div>
+        </div>
+      `;
+
+      function makeRow(entry) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatTs(entry.ts)}</td>
+          ${fields.map(f => `<td>${escapeHtml(String(entry.values?.[f.name] ?? '—'))}</td>`).join('')}
+          <td><button class="toolbar-btn delete-btn" data-ts="${entry.ts}" aria-label="Delete">×</button></td>
+        `;
+        attachDeleteHandler(tr.querySelector('.delete-btn'));
+        return tr;
+      }
+
+      function attachDeleteHandler(btn) {
+        btn.addEventListener('click', () => {
+          document.getElementById('confirmPopup')?.remove();
+          const ts = btn.dataset.ts;
+          const row = btn.closest('tr');
+          const rect = btn.getBoundingClientRect();
+          const popup = document.createElement('div');
+          popup.id = 'confirmPopup';
+          popup.className = 'confirm-popup';
+          popup.innerHTML = `
+            <button class="toolbar-btn danger-btn confirm-yes">Delete</button>
+            <button class="toolbar-btn confirm-no">Cancel</button>
+          `;
+          popup.style.top = `${rect.bottom + 4}px`;
+          popup.style.right = `${window.innerWidth - rect.right}px`;
+          document.body.appendChild(popup);
+          popup.querySelector('.confirm-no').addEventListener('click', () => popup.remove());
+          popup.querySelector('.confirm-yes').addEventListener('click', async () => {
+            popup.remove();
+            const snap = await get(ref(db, `${key}/entries/${ts}`));
+            const entry = snap.val();
+            try {
+              await remove(ref(db, `${key}/entries/${ts}`));
+            } catch (err) {
+              alert(`Delete failed: ${err.message}`);
+              return;
+            }
+            row.remove();
+            showUndoToast(db, key, ts, entry);
+          });
+        });
+      }
+
+      document.querySelectorAll('.delete-btn').forEach(btn => attachDeleteHandler(btn));
+
+      document.getElementById('entryForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const values = {};
+        document.querySelectorAll('[data-field]').forEach(el => {
+          const v = el.value.trim();
+          if (v) values[el.dataset.field] = v;
+        });
+        if (!Object.keys(values).length) return;
+        const ts = new Date(document.getElementById('entryTs').value).getTime();
+        if (!ts) return;
+        const entry = { ts, values };
+        try {
+          await set(ref(db, `${key}/entries/${ts}`), entry);
+        } catch (err) {
+          alert(`Save failed: ${err.message}`);
+          return;
+        }
+
+        const tbody = document.querySelector('table tbody');
+        if (tbody) {
+          tbody.insertBefore(makeRow(entry), tbody.firstChild);
+        } else {
+          document.querySelector('.table-wrap').innerHTML = renderTable(fields, [entry]);
+          document.querySelectorAll('.delete-btn').forEach(btn => attachDeleteHandler(btn));
+        }
+
+        document.querySelectorAll('[data-field]').forEach(el => el.value = '');
+        document.getElementById('entryTs').value = nowLocal();
+      });
+    }
+
+    function renderSettings(db, key, fields) {
+      document.getElementById('confirmPopup')?.remove();
+      document.getElementById('settingsBtn').style.display = 'none';
+      document.getElementById('main').innerHTML = `
+        <div class="panel">
+          <h2>Settings</h2>
+          <div class="form-actions">
+            <button type="button" id="editFieldsBtn" class="toolbar-btn">Edit Fields</button>
+            <button type="button" id="disconnectBtn" class="toolbar-btn">Disconnect</button>
+            <button type="button" id="cancelSettingsBtn" class="toolbar-btn">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('editFieldsBtn').addEventListener('click', () => renderFieldsSetup(db, key, fields));
+      document.getElementById('disconnectBtn').addEventListener('click', () => {
+        localStorage.removeItem(CONFIG_KEY);
+        location.reload();
+      });
+      document.getElementById('cancelSettingsBtn').addEventListener('click', () => renderMain(db, key));
+    }
+
+    let undoInterval = null;
+
+    function showUndoToast(db, key, ts, entry) {
+      document.getElementById('undoToast')?.remove();
+      clearInterval(undoInterval);
+
+      let seconds = 5;
+      const toast = document.createElement('div');
+      toast.id = 'undoToast';
+      toast.className = 'undo-toast';
+
+      function render() {
+        toast.innerHTML = `Entry deleted. <button class="toolbar-btn primary-btn" id="undoBtn">Undo</button> ${seconds}s`;
+        document.getElementById('undoBtn').addEventListener('click', async () => {
+          clearInterval(undoInterval);
+          toast.remove();
+          await set(ref(db, `${key}/entries/${ts}`), entry);
+          renderMain(db, key);
+        });
+      }
+
+      document.body.appendChild(toast);
+      render();
+
+      undoInterval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) { render(); } else { clearInterval(undoInterval); toast.remove(); }
+      }, 1000);
+    }
+
+    function renderTable(fields, entries) {
+      if (!entries.length) return `<p class="status">No entries yet.</p>`;
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              ${fields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('')}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.map(e => `
+              <tr>
+                <td>${formatTs(e.ts)}</td>
+                ${fields.map(f => `<td>${escapeHtml(String(e.values?.[f.name] ?? '—'))}</td>`).join('')}
+                <td><button class="toolbar-btn delete-btn" data-ts="${e.ts}" aria-label="Delete">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+
+    const cfg = loadConfig();
+    if (cfg) {
+      try {
+        renderMain(getFirebase(cfg), cfg.hashedKey);
+      } catch {
+        renderSetup('Could not reconnect. Please check your settings.');
+      }
+    } else {
+      renderSetup();
+    }
+  </script>
+</body>
+
+</html>
