@@ -5,7 +5,9 @@
 > write and debug production code in myself (JavaScript). I can look at it and
 > say "Mmm, purdy.", but not a lot else. I use it to store unimportant data.
 > Because it stores data you shouldn't use it for anything important, and
-> probably shouldn't use it at all.
+> probably shouldn't use it at all. The repository is public only so I can
+> publish it via GitHub Pages for my own use — it is not intended for anyone
+> else.
 
 A configurable personal data tracker. Log metrics like blood pressure, weight,
 and anything else you want to track — stored in Firebase, accessible from any

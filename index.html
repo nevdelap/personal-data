@@ -161,6 +161,18 @@
       color: #fff;
     }
 
+    .toolbar-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .primary-btn:disabled {
+      background: var(--border-mid);
+      border-color: var(--border-mid);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
     .primary-btn:focus-visible,
     .primary-btn:active {
       background: #1d4ed8;
@@ -311,70 +323,20 @@
       }
     }
 
-    /* ── Entry form ─────────────────────────────────────────────────────────── */
+    /* ── History table ──────────────────────────────────────────────────────── */
 
-    .entry-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 32px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border-mid);
-    }
-
-    .entry-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .field-input-row {
+    .history-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
-
-    .field-input-row input {
-      width: 200px;
-      flex-shrink: 0;
-    }
-
-    .field-note {
-      font-size: 10px;
-      color: var(--text-faint);
-      letter-spacing: 0;
-      text-transform: none;
-      font-weight: normal;
-      text-wrap: balance;
-    }
-
-    #entryTs {
-      width: 200px;
-    }
-
-    .entry-form .field-label input {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-mid);
-      border-radius: 3px;
-      color: var(--text);
-      font-size: 13px;
-      padding: 8px 10px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .entry-form .field-label input:focus {
-      border-color: var(--accent);
-    }
-
-    /* ── History table ──────────────────────────────────────────────────────── */
 
     .history-heading {
       font-size: 11px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 12px;
     }
 
     .table-wrap {
@@ -427,11 +389,16 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .delete-btn {
+    .delete-btn,
+    .edit-btn {
       padding: 2px 7px;
       font-size: 14px;
       border-color: transparent;
       color: var(--text-muted);
+    }
+
+    td .text-input {
+      padding: 4px 8px;
     }
 
     .danger-btn {
@@ -479,7 +446,7 @@
     <header>
       <div class="header-left">
         <div class="logo">Personal <span>Data</span></div>
-        <div class="subtitle">v0.1.0</div>
+        <div class="subtitle">v0.0.3</div>
       </div>
       <div class="header-actions">
         <button type="button" id="settingsBtn" class="toolbar-btn" style="display:none">Settings</button>
@@ -490,7 +457,7 @@
     <main id="main"></main>
 
     <footer>
-      © 2026 Nev Delap. Vibe coded — shouldn't be used by anyone, anywhere, anytime, for anything at all!!
+      © 2026 Nev Delap. Vibe coded — shouldn't be used by anyone, anywhere, anytime, for anything, at all!!
     </footer>
   </div>
 
@@ -523,7 +490,7 @@
   </script>
 
   <script type="module">
-    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { initializeApp, getApps, getApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
     import { getDatabase, ref, set, get, remove } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
     const CONFIG_KEY = 'pd_config';
@@ -537,8 +504,13 @@
     }
 
     function getFirebase(cfg) {
-      const app = getApps().length ? getApp() : initializeApp({ apiKey: cfg.apiKey, databaseURL: cfg.databaseURL });
-      return getDatabase(app);
+      if (getApps().length) {
+        const existing = getApp();
+        const opts = existing.options;
+        if (opts.apiKey !== cfg.apiKey || opts.databaseURL !== cfg.databaseURL) deleteApp(existing);
+        else return getDatabase(existing);
+      }
+      return getDatabase(initializeApp({ apiKey: cfg.apiKey, databaseURL: cfg.databaseURL }));
     }
 
     function sanitizeKey(key) {
@@ -585,7 +557,7 @@
                 placeholder="https://your-project-default-rtdb.firebaseio.com" />
             </label>
             <label class="field-label">Personal Key
-              <input class="text-input" type="text" id="personalKey" name="personalKey" spellcheck="false"
+              <input class="text-input" type="text" id="personalKey" name="personalKey" autocomplete="off" spellcheck="false"
                 placeholder="Something memorable" />
             </label>
             ${errorMsg ? `<p class="error">${escapeHtml(errorMsg)}</p>` : ''}
@@ -596,13 +568,15 @@
         </div>
       `;
 
-      const connectBtn = document.getElementById('connectBtn');
-      const inputs = ['apiKey', 'databaseURL', 'personalKey'].map(id => document.getElementById(id));
       function checkFields() {
-        connectBtn.disabled = !inputs.every(el => el.value.trim());
+        document.getElementById('connectBtn').disabled = !['apiKey', 'databaseURL', 'personalKey'].every(id =>
+          document.getElementById(id).value.trim()
+        );
       }
-      inputs.forEach(el => { el.addEventListener('input', checkFields); el.addEventListener('change', checkFields); });
-      setTimeout(checkFields, 300);
+      ['apiKey', 'databaseURL', 'personalKey'].forEach(id =>
+        document.getElementById(id).addEventListener('input', checkFields)
+      );
+      setTimeout(checkFields, 100);
 
       document.getElementById('setupForm').addEventListener('submit', async e => {
         e.preventDefault();
@@ -629,6 +603,8 @@
     }
 
     function renderFieldsSetup(db, key, existing = []) {
+      document.getElementById('undoToast')?.remove();
+      clearInterval(undoInterval);
       document.getElementById('settingsBtn').style.display = 'none';
       const main = document.getElementById('main');
 
@@ -664,7 +640,10 @@
               <div class="form-actions">
                 <button type="button" id="addFieldBtn" class="toolbar-btn">+ Add Field</button>
                 <button type="button" id="saveFieldsBtn" class="toolbar-btn primary-btn">Save</button>
-                ${existing.length ? `<button type="button" id="cancelFieldsBtn" class="toolbar-btn">Cancel</button>` : ''}
+                ${existing.length
+            ? `<button type="button" id="cancelFieldsBtn" class="toolbar-btn">Cancel</button>`
+            : `<button type="button" id="disconnectBtn" class="toolbar-btn">Disconnect</button>`
+          }
               </div>
             </div>
           </div>
@@ -690,11 +669,20 @@
           readFields();
           const cleaned = fields.filter(f => f.name.trim()).map(f => ({ name: f.name.trim(), notes: f.notes.trim() }));
           if (!cleaned.length) return;
-          await set(ref(db, `${key}/fields`), cleaned);
+          try {
+            await set(ref(db, `${key}/fields`), cleaned);
+          } catch (err) {
+            alert(`Save failed: ${err.message}`);
+            return;
+          }
           renderMain(db, key);
         });
 
         document.getElementById('cancelFieldsBtn')?.addEventListener('click', () => renderMain(db, key));
+        document.getElementById('disconnectBtn')?.addEventListener('click', () => {
+          localStorage.removeItem(CONFIG_KEY);
+          location.reload();
+        });
 
         let dragSrc = null;
         document.querySelectorAll('.field-row').forEach((row, i) => {
@@ -741,37 +729,83 @@
       document.getElementById('settingsBtn').onclick = () => renderSettings(db, key, fields);
 
       document.getElementById('main').innerHTML = `
-        <form id="entryForm" class="entry-form">
-          <label class="field-label">Time
-            <input type="datetime-local" id="entryTs" value="${nowLocal()}" />
-          </label>
-          <div class="entry-fields">
-            ${fields.map(f => `
-              <label class="field-label">${escapeHtml(f.name)}
-                <div class="field-input-row">
-                  <input type="text" inputmode="decimal" data-field="${escapeHtml(f.name)}" autocomplete="off" />
-                  ${f.notes ? `<span class="field-note">${escapeHtml(f.notes)}</span>` : ''}
-                </div>
-              </label>
-            `).join('')}
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="toolbar-btn primary-btn">Save</button>
-          </div>
-        </form>
-        <div>
+        <div class="history-header">
           <p class="history-heading">History</p>
-          <div class="table-wrap">${renderTable(fields, entries)}</div>
+          <button type="button" id="addEntryBtn" class="toolbar-btn">+ Add Entry</button>
         </div>
+        <div class="table-wrap">${renderTable(fields, entries)}</div>
       `;
+
+      function lockEditing() {
+        document.getElementById('addEntryBtn')?.setAttribute('disabled', '');
+        document.querySelectorAll('.edit-btn').forEach(b => b.setAttribute('disabled', ''));
+      }
+
+      function unlockEditing() {
+        document.getElementById('addEntryBtn')?.removeAttribute('disabled');
+        document.querySelectorAll('.edit-btn').forEach(b => b.removeAttribute('disabled'));
+      }
+
+      const tsSet = new Set(entries.map(e => e.ts));
+
+      function makeEditRow(existingEntry) {
+        const ts = existingEntry?.ts;
+        const d = ts ? new Date(ts) : null;
+        const localTs = d
+          ? new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+          : nowLocal();
+        const tr = document.createElement('tr');
+        tr.className = 'editing-row';
+        tr.innerHTML = `
+          <td><input type="datetime-local" class="text-input" value="${localTs}" style="width:190px" /></td>
+          ${fields.map(f => `<td><input type="text" inputmode="decimal" class="text-input" data-edit-field="${escapeHtml(f.name)}" value="${escapeHtml(String(existingEntry?.values?.[f.name] ?? ''))}" style="width:120px" /></td>`).join('')}
+          <td style="white-space:nowrap">
+            <button class="toolbar-btn primary-btn edit-save">Save</button>
+            <button class="toolbar-btn edit-cancel">Cancel</button>
+          </td>
+        `;
+        return tr;
+      }
+
+      async function doSave(editTr, oldEntry) {
+        const newTs = new Date(editTr.querySelector('input[type=datetime-local]').value).getTime();
+        if (!newTs) return null;
+        if (tsSet.has(newTs) && newTs !== oldEntry?.ts) {
+          alert('An entry already exists at this time. Please choose a different time.');
+          return null;
+        }
+        const newValues = {};
+        editTr.querySelectorAll('[data-edit-field]').forEach(el => {
+          const v = el.value.trim();
+          if (v) newValues[el.dataset.editField] = v;
+        });
+        if (!Object.keys(newValues).length) return null;
+        const newEntry = { ts: newTs, values: newValues };
+        try {
+          await set(ref(db, `${key}/entries/${newTs}`), newEntry);
+        } catch (err) {
+          alert(`Save failed: ${err.message}`);
+          return null;
+        }
+        if (oldEntry && newTs !== oldEntry.ts) {
+          try { await remove(ref(db, `${key}/entries/${oldEntry.ts}`)); } catch { /* orphan accepted */ }
+          tsSet.delete(oldEntry.ts);
+        }
+        tsSet.add(newTs);
+        return newEntry;
+      }
 
       function makeRow(entry) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${formatTs(entry.ts)}</td>
           ${fields.map(f => `<td>${escapeHtml(String(entry.values?.[f.name] ?? '—'))}</td>`).join('')}
-          <td><button class="toolbar-btn delete-btn" data-ts="${entry.ts}" aria-label="Delete">×</button></td>
+          <td style="white-space:nowrap">
+            <button class="toolbar-btn edit-btn" aria-label="Edit">✎</button>
+            <button class="toolbar-btn delete-btn" data-ts="${entry.ts}" aria-label="Delete">×</button>
+          </td>
         `;
+        attachEditHandler(tr.querySelector('.edit-btn'), entry, tr);
         attachDeleteHandler(tr.querySelector('.delete-btn'));
         return tr;
       }
@@ -803,47 +837,84 @@
               alert(`Delete failed: ${err.message}`);
               return;
             }
+            tsSet.delete(Number(ts));
             row.remove();
-            showUndoToast(db, key, ts, entry, row);
+            lockEditing();
+            showUndoToast(db, key, ts, entry, row, tsSet, unlockEditing);
           });
         });
       }
 
-      document.querySelectorAll('.delete-btn').forEach(btn => attachDeleteHandler(btn));
-
-      document.getElementById('entryForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const values = {};
-        document.querySelectorAll('[data-field]').forEach(el => {
-          const v = el.value.trim();
-          if (v) values[el.dataset.field] = v;
+      function attachEditHandler(btn, entry, tr) {
+        btn.addEventListener('click', () => {
+          document.getElementById('confirmPopup')?.remove();
+          lockEditing();
+          const editTr = makeEditRow(entry);
+          editTr.querySelector('.edit-cancel').addEventListener('click', () => {
+            editTr.replaceWith(tr);
+            unlockEditing();
+          });
+          async function save() {
+            const newEntry = await doSave(editTr, entry);
+            if (newEntry) { editTr.replaceWith(makeRow(newEntry)); unlockEditing(); }
+          }
+          editTr.querySelector('.edit-save').addEventListener('click', save);
+          editTr.querySelectorAll('input').forEach(el =>
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } })
+          );
+          tr.replaceWith(editTr);
         });
-        if (!Object.keys(values).length) return;
-        const ts = new Date(document.getElementById('entryTs').value).getTime();
-        if (!ts) return;
-        const entry = { ts, values };
-        try {
-          await set(ref(db, `${key}/entries/${ts}`), entry);
-        } catch (err) {
-          alert(`Save failed: ${err.message}`);
-          return;
-        }
+      }
 
-        const tbody = document.querySelector('table tbody');
-        if (tbody) {
-          tbody.insertBefore(makeRow(entry), tbody.firstChild);
-        } else {
-          document.querySelector('.table-wrap').innerHTML = renderTable(fields, [entry]);
-          document.querySelectorAll('.delete-btn').forEach(btn => attachDeleteHandler(btn));
+      [...(document.querySelector('table tbody')?.querySelectorAll('tr') ?? [])].forEach((tr, i) => {
+        if (entries[i]) {
+          attachEditHandler(tr.querySelector('.edit-btn'), entries[i], tr);
+          attachDeleteHandler(tr.querySelector('.delete-btn'));
         }
+      });
 
-        document.querySelectorAll('[data-field]').forEach(el => el.value = '');
-        document.getElementById('entryTs').value = nowLocal();
+      document.getElementById('addEntryBtn').addEventListener('click', () => {
+        document.getElementById('confirmPopup')?.remove();
+        lockEditing();
+        let tbody = document.querySelector('table tbody');
+        if (!tbody) {
+          document.querySelector('.table-wrap').innerHTML = `
+            <table>
+              <thead><tr>
+                <th>Time</th>
+                ${fields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('')}
+                <th></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          `;
+          tbody = document.querySelector('table tbody');
+        }
+        const newTr = makeEditRow(null);
+        newTr.querySelector('.edit-cancel').addEventListener('click', () => {
+          newTr.remove();
+          unlockEditing();
+          if (!document.querySelector('table tbody tr')) {
+            document.querySelector('.table-wrap').innerHTML = `<p class="status">No entries yet.</p>`;
+          }
+        });
+        async function save() {
+          const newEntry = await doSave(newTr, null);
+          if (newEntry) { newTr.replaceWith(makeRow(newEntry)); unlockEditing(); }
+        }
+        newTr.querySelector('.edit-save').addEventListener('click', save);
+        newTr.querySelectorAll('input').forEach(el =>
+          el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } })
+        );
+        tbody.insertBefore(newTr, tbody.firstChild);
+        newTr.querySelector('[data-edit-field]')?.focus();
       });
     }
 
     function renderSettings(db, key, fields) {
       document.getElementById('confirmPopup')?.remove();
+      document.getElementById('undoToast')?.remove();
+      clearInterval(undoInterval);
       document.getElementById('settingsBtn').style.display = 'none';
       document.getElementById('main').innerHTML = `
         <div class="panel">
@@ -865,7 +936,7 @@
 
     let undoInterval = null;
 
-    function showUndoToast(db, key, ts, entry, row) {
+    function showUndoToast(db, key, ts, entry, row, tsSet, onDismiss) {
       document.getElementById('undoToast')?.remove();
       clearInterval(undoInterval);
 
@@ -880,6 +951,7 @@
           clearInterval(undoInterval);
           toast.remove();
           await set(ref(db, `${key}/entries/${ts}`), entry);
+          tsSet?.add(Number(ts));
           const tbody = document.querySelector('table tbody');
           if (tbody) {
             const after = [...tbody.querySelectorAll('tr')].find(r =>
@@ -889,6 +961,7 @@
           } else {
             renderMain(db, key);
           }
+          onDismiss?.();
         });
       }
 
@@ -897,7 +970,7 @@
 
       undoInterval = setInterval(() => {
         seconds--;
-        if (seconds > 0) { render(); } else { clearInterval(undoInterval); toast.remove(); }
+        if (seconds > 0) { render(); } else { clearInterval(undoInterval); toast.remove(); onDismiss?.(); }
       }, 1000);
     }
 
@@ -917,7 +990,10 @@
               <tr>
                 <td>${formatTs(e.ts)}</td>
                 ${fields.map(f => `<td>${escapeHtml(String(e.values?.[f.name] ?? '—'))}</td>`).join('')}
-                <td><button class="toolbar-btn delete-btn" data-ts="${e.ts}" aria-label="Delete">×</button></td>
+                <td style="white-space:nowrap">
+                  <button class="toolbar-btn edit-btn" aria-label="Edit">✎</button>
+                  <button class="toolbar-btn delete-btn" data-ts="${e.ts}" aria-label="Delete">×</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
