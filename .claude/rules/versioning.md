@@ -18,12 +18,13 @@ If `index.html` already has a higher version than the latest tag, do **not** bum
 
 ## How to set the version
 
+This project will never reach v1.0.0. Keep the major version at 0 always.
+
 When bumping, look at everything that has changed since the latest tag and apply
 **exactly one bump** at the highest level required:
 
-- Any breaking change → major (1.2.0 → 2.0.0)
-- Any new feature, no breaking changes → minor (1.2.0 → 1.3.0)
-- Only bug fixes → patch (1.2.0 → 1.2.1)
+- Any new feature, no breaking changes → minor (0.2.0 → 0.3.0)
+- Only bug fixes → patch (0.2.0 → 0.2.1)
 
 The result is always `tag_version + one bump`. Never accumulate multiple bumps
 (e.g. if the tag is v1.2.0 and there is already a feature bump to v1.3.0 in

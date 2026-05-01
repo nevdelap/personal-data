@@ -424,7 +424,7 @@
       display: flex;
       gap: 6px;
       z-index: 50;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .delete-btn {
@@ -468,7 +468,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       z-index: 100;
     }
   </style>
@@ -490,7 +490,7 @@
     <main id="main"></main>
 
     <footer>
-      © 2026 Nev Delap.
+      © 2026 Nev Delap. Vibe coded — shouldn't be used by anyone, anywhere, anytime, for anything at all!!
     </footer>
   </div>
 
@@ -804,7 +804,7 @@
               return;
             }
             row.remove();
-            showUndoToast(db, key, ts, entry);
+            showUndoToast(db, key, ts, entry, row);
           });
         });
       }
@@ -865,7 +865,7 @@
 
     let undoInterval = null;
 
-    function showUndoToast(db, key, ts, entry) {
+    function showUndoToast(db, key, ts, entry, row) {
       document.getElementById('undoToast')?.remove();
       clearInterval(undoInterval);
 
@@ -880,7 +880,15 @@
           clearInterval(undoInterval);
           toast.remove();
           await set(ref(db, `${key}/entries/${ts}`), entry);
-          renderMain(db, key);
+          const tbody = document.querySelector('table tbody');
+          if (tbody) {
+            const after = [...tbody.querySelectorAll('tr')].find(r =>
+              Number(r.querySelector('.delete-btn')?.dataset.ts) < ts
+            );
+            tbody.insertBefore(row, after ?? null);
+          } else {
+            renderMain(db, key);
+          }
         });
       }
 
