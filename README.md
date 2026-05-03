@@ -45,6 +45,10 @@ in the same Firebase database.
 Credentials are stored only in the browser's local storage — nothing is
 hardcoded.
 
+## License
+
+- App code: [MIT](LICENSE)
+
 ## Local development
 
 ```bash
